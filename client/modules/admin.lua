@@ -65,7 +65,7 @@ function admin.init()
     local targetId = tonumber(args[1])
 
     if not targetId then
-      targetId = GetPlayerServerId(PlayerId()) -- fall back to self
+      targetId = GetPlayerServerId(PlayerId())
     end
 
     logger.debug("Admin command: editing player", targetId)
