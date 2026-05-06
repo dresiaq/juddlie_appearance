@@ -14,8 +14,8 @@ import {
 import { useConfig } from "../store/config";
 import { useLocale } from "../store/locale";
 
-const collapsedWidth = 46;
-const expandedWidth = 130;
+const collapsedWidth = "clamp(46px, 2.35vw, 58px)";
+const expandedWidth = "clamp(130px, 6.8vw, 168px)";
 
 const useStyles = createStyles((theme, { collapsed }: { collapsed: boolean }) => ({
 	sidebar: {
@@ -33,12 +33,17 @@ const useStyles = createStyles((theme, { collapsed }: { collapsed: boolean }) =>
 		display: "flex",
 		alignItems: "center",
 		justifyContent: collapsed ? "center" : "flex-start",
-		gap: 8,
+		gap: "clamp(8px, 0.45vw, 11px)",
 		width: "100%",
-		padding: collapsed ? "8px 0" : "6px 10px",
+		padding: collapsed ? "clamp(8px, 0.45vw, 11px) 0" : "clamp(6px, 0.4vw, 10px) clamp(10px, 0.6vw, 14px)",
 		color: theme.colors.dark[1],
-		fontSize: 12,
+		fontSize: "clamp(12px, 0.6vw, 14px)",
 		transition: "background-color 150ms",
+		"& svg": {
+			width: "clamp(16px, 0.85vw, 21px)",
+			height: "clamp(16px, 0.85vw, 21px)",
+			flexShrink: 0,
+		},
 		"&:hover": {
 			backgroundColor: theme.colors.dark[6],
 			color: theme.white,
@@ -55,21 +60,21 @@ const useStyles = createStyles((theme, { collapsed }: { collapsed: boolean }) =>
 	tooltip: {
 		position: "fixed" as const,
 		pointerEvents: "none" as const,
-		padding: "4px 8px",
+		padding: "clamp(4px, 0.3vw, 6px) clamp(8px, 0.45vw, 12px)",
 		backgroundColor: theme.colors.dark[5],
 		color: theme.white,
-		fontSize: 11,
+		fontSize: "clamp(11px, 0.55vw, 13px)",
 		fontWeight: 500,
 		borderRadius: theme.radius.sm,
 		whiteSpace: "nowrap" as const,
 		zIndex: 10000,
 	},
 	navList: {
-		padding: collapsed ? "8px 4px" : "8px 6px",
+		padding: collapsed ? "clamp(8px, 0.45vw, 12px) 4px" : "clamp(8px, 0.45vw, 12px) clamp(6px, 0.35vw, 9px)",
 		flex: 1,
 	},
 	sectionLabel: {
-		fontSize: 9,
+		fontSize: "clamp(9px, 0.48vw, 11px)",
 		color: theme.colors.dark[3],
 		textTransform: "uppercase",
 		fontWeight: 700,
@@ -81,9 +86,13 @@ const useStyles = createStyles((theme, { collapsed }: { collapsed: boolean }) =>
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		padding: "8px 0",
+		padding: "clamp(8px, 0.45vw, 12px) 0",
 		color: theme.colors.dark[2],
 		borderTop: `1px solid ${theme.colors.dark[5]}`,
+		"& svg": {
+			width: "clamp(16px, 0.85vw, 21px)",
+			height: "clamp(16px, 0.85vw, 21px)",
+		},
 		"&:hover": {
 			color: theme.white,
 			backgroundColor: theme.colors.dark[6],

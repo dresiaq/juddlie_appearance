@@ -13,22 +13,22 @@ import CostTracker from "./CostTracker";
 const useStyles = createStyles((theme) => ({
 	bar: {
 		borderTop: `1px solid ${theme.colors.dark[5]}`,
-		padding: 8,
+		padding: "clamp(8px, 0.5vw, 12px)",
 		display: "flex",
 		flexDirection: "column",
-		gap: 8,
+		gap: "clamp(8px, 0.5vw, 12px)",
 	},
 	quickSlots: {
 		display: "flex",
-		gap: 4,
+		gap: "clamp(4px, 0.3vw, 7px)",
 	},
 	slot: {
 		flex: 1,
-		padding: "6px 4px",
+		padding: "clamp(6px, 0.4vw, 9px) 4px",
 		backgroundColor: theme.colors.dark[7],
 		borderRadius: theme.radius.sm,
 		textAlign: "center",
-		fontSize: 10,
+		fontSize: "clamp(10px, 0.5vw, 12px)",
 		color: theme.colors.dark[1],
 		transition: "background-color 150ms",
 		"&:hover": {
@@ -38,7 +38,7 @@ const useStyles = createStyles((theme) => ({
 	},
 	actions: {
 		display: "flex",
-		gap: 4,
+		gap: "clamp(4px, 0.3vw, 7px)",
 	},
 	actionBtn: {
 		flex: 1,

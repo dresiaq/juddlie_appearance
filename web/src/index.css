@@ -3,11 +3,14 @@
 
 html, body {
   margin: 0;
+  font-size: clamp(14px, 0.76vw, 16px);
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
     'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 100vh;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100vh;
   user-select: none;
   background: transparent !important;
   background-color: transparent !important;
@@ -17,6 +20,37 @@ html, body {
 
 #root {
   height: 100%;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+@media (min-width: 2200px), (min-height: 1300px) {
+  html, body {
+    font-size: clamp(16px, 0.68vw, 18px);
+  }
+}
+
+@media (max-width: 1366px), (max-height: 760px) {
+  html, body {
+    font-size: 14px;
+  }
+}
+
+.mantine-Modal-body,
+.mantine-Modal-modal,
+.mantine-Slider-root,
+.mantine-Slider-trackContainer {
+  overflow: visible;
+}
+
+.mantine-Slider-label {
+  max-width: none;
+  white-space: nowrap;
+  z-index: 40;
+}
+
+.mantine-NumberInput-input {
+  min-width: 0;
 }
 
 code {

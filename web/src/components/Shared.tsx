@@ -9,31 +9,58 @@ const useSliderStyles = createStyles((theme) => ({
 	root: {
 		display: "flex",
 		alignItems: "center",
-		gap: 6,
-		padding: "4px 0",
+		gap: "clamp(6px, 0.45vw, 10px)",
+		padding: "clamp(5px, 0.4vw, 8px) 0",
+		overflow: "visible",
+		["@media (max-width: 430px)"]: {
+			alignItems: "stretch",
+			flexWrap: "wrap" as const,
+			gap: 6,
+		},
 	},
 	label: {
-		fontSize: 11,
+		fontSize: "clamp(11px, 0.55vw, 13px)",
 		color: theme.colors.dark[1],
-		width: 70,
+		width: "clamp(70px, 22%, 112px)",
 		flexShrink: 0,
 		whiteSpace: "nowrap" as const,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
+		["@media (max-width: 430px)"]: {
+			width: "100%",
+		},
 	},
 	slider: {
 		flex: 1,
-		minWidth: 0,
+		minWidth: 120,
+		overflow: "visible",
+		"& .mantine-Slider-root": {
+			overflow: "visible",
+		},
+		"& .mantine-Slider-label": {
+			maxWidth: "none",
+			whiteSpace: "nowrap" as const,
+			zIndex: 30,
+			pointerEvents: "none" as const,
+		},
+		["@media (max-width: 430px)"]: {
+			flexBasis: "100%",
+			minWidth: "100%",
+		},
 	},
 	stepBtn: {
 		flexShrink: 0,
 		color: theme.colors.dark[1],
+		"& svg": {
+			width: "clamp(10px, 0.58vw, 14px)",
+			height: "clamp(10px, 0.58vw, 14px)",
+		},
 		"&:hover": { color: theme.white, backgroundColor: theme.colors.dark[6] },
 	},
 	tail: {
-		fontSize: 10,
+		fontSize: "clamp(10px, 0.5vw, 12px)",
 		color: theme.colors.dark[2],
-		width: 34,
+		width: "clamp(34px, 8%, 52px)",
 		flexShrink: 0,
 		textAlign: "right" as const,
 		whiteSpace: "nowrap" as const,
@@ -82,7 +109,8 @@ export const ValueSlider: React.FC<ValueSliderProps> = ({
 				precision={precision}
 				size="xs"
 				hideControls
-				sx={{ width: 54, flexShrink: 0 }}
+				styles={{ input: { textAlign: "center", paddingLeft: 6, paddingRight: 6 } }}
+				sx={{ width: "clamp(58px, 12%, 76px)", flexShrink: 0 }}
 			/>
 			<Box className={classes.tail} />
 		</Box>
@@ -126,7 +154,8 @@ export const IndexSelector: React.FC<IndexSelectorProps> = ({ label, value, onCh
 				step={1}
 				size="xs"
 				hideControls
-				sx={{ width: 54, flexShrink: 0 }}
+				styles={{ input: { textAlign: "center", paddingLeft: 6, paddingRight: 6 } }}
+				sx={{ width: "clamp(58px, 12%, 76px)", flexShrink: 0 }}
 			/>
 			<Text className={classes.tail}>/ {String(max).padStart(3, "0")}</Text>
 		</Box>
@@ -246,7 +275,7 @@ export const ColorSwatchBtn: React.FC<ColorSwatchBtnProps> = ({ color, active, o
 };
 
 export const SectionHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-	<Text size={11} color="dimmed" weight={700} transform="uppercase" sx={{ letterSpacing: 0.5, padding: "8px 0 4px" }}>
+	<Text color="dimmed" weight={700} transform="uppercase" sx={{ fontSize: "clamp(11px, 0.55vw, 13px)", letterSpacing: 0.5, padding: "clamp(8px, 0.5vw, 12px) 0 4px" }}>
 		{children}
 	</Text>
 );
@@ -255,7 +284,8 @@ const usePanelStyles = createStyles((theme) => ({
 	panel: {
 		backgroundColor: theme.colors.dark[7],
 		borderRadius: theme.radius.sm,
-		padding: 12,
+		padding: "clamp(10px, 0.65vw, 16px)",
+		overflow: "visible",
 	},
 }));
 

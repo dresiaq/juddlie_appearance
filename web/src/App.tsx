@@ -40,19 +40,36 @@ import type { Outfit } from "./types/outfit";
 const useStyles = createStyles((theme) => ({
 	container: {
 		width: "100%",
-		height: "100%",
+		height: "100dvh",
+		minHeight: "100vh",
 		display: "flex",
 		alignItems: "stretch",
+		padding: 0,
+		boxSizing: "border-box" as const,
 	},
 	main: {
-		width: "100%",
-		maxWidth: 520,
-		minWidth: 300,
-		height: "100vh",
+		width: "clamp(390px, 27vw, 640px)",
+		maxWidth: "calc(100vw - 24px)",
+		minWidth: "min(340px, calc(100vw - 24px))",
+		height: "100dvh",
+		minHeight: "100vh",
 		backgroundColor: theme.colors.dark[8],
 		display: "flex",
-		overflowX: "auto",
+		overflow: "hidden",
 		position: "relative",
+		boxShadow: "0 18px 45px rgba(0, 0, 0, 0.32)",
+		["@media (min-width: 2200px), (min-height: 1300px)"]: {
+			width: "clamp(560px, 25vw, 700px)",
+		},
+		["@media (max-width: 1366px), (max-height: 760px)"]: {
+			width: "clamp(360px, 31vw, 500px)",
+		},
+		["@media (max-width: 420px)"]: {
+			width: "100vw",
+			maxWidth: "100vw",
+			minWidth: "100vw",
+			borderRadius: 0,
+		},
 	},
 	content: {
 		flex: 1,
@@ -112,6 +129,7 @@ const App: React.FC = () => {
 	const setConfig = useConfig((s) => s.setConfig);
 	const setAllowedTabs = useConfig((s) => s.setAllowedTabs);
 	const setShopType = useConfig((s) => s.setShopType);
+	const setPedMenuActive = useConfig((s) => s.setPedMenuActive);
 	const setLocaleStrings = useLocale((s) => s.setStrings);
 	const setLocaleName = useLocale((s) => s.setLocale);
 	const setMaxValues = useMaxValues((s) => s.setMaxValues);
@@ -144,7 +162,10 @@ const App: React.FC = () => {
 
 	useNuiEvent("setVisible", (data?: { visible: boolean; route?: string }) => {
 		if (data?.visible !== undefined) setVisible(data.visible);
-		if (!data?.visible) setAllowedTabs(null);
+		if (!data?.visible) {
+			setAllowedTabs(null);
+			setPedMenuActive(false);
+		}
 		if (data?.route) navigate(data.route);
 	});
 
@@ -174,6 +195,10 @@ const App: React.FC = () => {
 
 	useNuiEvent("setShopType", (data: { shopType: string | null }) => {
 		setShopType(data.shopType ?? null);
+	});
+
+	useNuiEvent("setPedMenuActive", (data?: { active?: boolean }) => {
+		setPedMenuActive(data?.active === true);
 	});
 
 	useNuiEvent("setAllowedTabs", (data: { tabs: string[] }) => {

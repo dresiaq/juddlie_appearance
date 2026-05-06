@@ -46,6 +46,11 @@ export interface ShareConfig {
 	defaultTtlSeconds?: number;
 }
 
+export interface PedModelOption {
+	value: string;
+	label: string;
+}
+
 export interface ConfigState {
 	loaded: boolean;
 	cameraPresets: { value: string; label: string }[];
@@ -73,7 +78,9 @@ export interface ConfigState {
 	walkStyleCategories: { value: string; label: string }[];
 	outfitCategories: { value: string; label: string }[];
 	locale: string;
-	pedModels: { value: string; label: string }[];
+	pedModels: PedModelOption[];
+	pedMenuPedModels: PedModelOption[] | null;
+	pedMenuActive: boolean;
 	disabledComponents: number[];
 	disabledProps: number[];
 	allowedTabs: string[] | null;
@@ -88,6 +95,7 @@ export interface ConfigState {
 	setConfig: (config: Partial<ConfigState>) => void;
 	setAllowedTabs: (tabs: string[] | null) => void;
 	setShopType: (shopType: string | null) => void;
+	setPedMenuActive: (active: boolean) => void;
 }
 
 export const useConfig = create<ConfigState>((set) => ({
@@ -126,6 +134,8 @@ export const useConfig = create<ConfigState>((set) => ({
 	outfitCategories: [],
 	locale: "en",
 	pedModels: [],
+	pedMenuPedModels: null,
+	pedMenuActive: false,
 	disabledComponents: [],
 	disabledProps: [],
 	allowedTabs: null,
@@ -140,4 +150,5 @@ export const useConfig = create<ConfigState>((set) => ({
 	setConfig: (config) => set((state) => ({ ...state, ...config, loaded: true })),
 	setAllowedTabs: (tabs) => set({ allowedTabs: tabs }),
 	setShopType: (shopType) => set({ shopType }),
+	setPedMenuActive: (active) => set({ pedMenuActive: active }),
 }));

@@ -22,12 +22,12 @@ const useStyles = createStyles((theme) => ({
 	},
 	panelCard: {
 		minWidth: 0,
-		overflowX: "auto",
+		overflow: "visible",
 	},
 	panelContent: {
 		minWidth: 0,
 		width: "100%",
-		overflowX: "auto",
+		overflow: "visible",
 		display: "flex",
 		flexDirection: "column",
 		gap: 8,
@@ -83,7 +83,7 @@ const Colors: React.FC = () => {
 
 			<ScrollArea sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
 				<Stack spacing={8} sx={{ minWidth: 0, minHeight: 0 }}>
-					<PanelCard sx={classes.panelCard}>
+					<PanelCard sx={{ minWidth: 0, overflow: "visible" }}>
 						<Box className={classes.panelContent}>
 							<SectionHeader>{t("ui.colors.eye_color")}</SectionHeader>
 							<IndexSelector
@@ -95,7 +95,7 @@ const Colors: React.FC = () => {
 						</Box>
 					</PanelCard>
 
-					<PanelCard sx={classes.panelCard}>
+					<PanelCard sx={{ minWidth: 0, overflow: "visible" }}>
 						<Box className={classes.panelContent}>
 							<SectionHeader>{t("ui.colors.overlay_details")}</SectionHeader>
 							<Select

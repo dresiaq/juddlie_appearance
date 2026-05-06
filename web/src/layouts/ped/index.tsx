@@ -44,18 +44,21 @@ const Ped: React.FC = () => {
 	const [search, setSearch] = useState("");
 
 	const pedModels = useConfig((s) => s.pedModels);
+	const pedMenuPedModels = useConfig((s) => s.pedMenuPedModels);
+	const pedMenuActive = useConfig((s) => s.pedMenuActive);
 	const currentModel = useAppearance((s) => s.current.model);
 	const setModel = useAppearance((s) => s.setModel);
 
 	const accentColor = useMantineTheme().primaryColor;
+	const visiblePedModels = pedMenuActive && pedMenuPedModels ? pedMenuPedModels : pedModels;
 
 	const filteredModels = useMemo(() => {
-		if (!search) return pedModels;
+		if (!search) return visiblePedModels;
 		const lower = search.toLowerCase();
-		return pedModels.filter(
+		return visiblePedModels.filter(
 			(m) => m.label.toLowerCase().includes(lower) || m.value.toLowerCase().includes(lower)
 		);
-	}, [search, pedModels]);
+	}, [search, visiblePedModels]);
 
 	const handleSelectModel = (model: string) => {
 		setModel(model);
@@ -66,7 +69,7 @@ const Ped: React.FC = () => {
 		<Box className={classes.container}>
 			<Box className={classes.header}>
 				<Text size="lg" weight={700}>{t("ui.ped.title")}</Text>
-				<Badge size="sm" variant="filled">{pedModels.length}</Badge>
+				<Badge size="sm" variant="filled">{visiblePedModels.length}</Badge>
 			</Box>
 
 			<TextInput
