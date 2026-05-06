@@ -197,6 +197,11 @@ end)
 nui.handleMessage("appearance:browseTattoos", function(data)
   if type(data) ~= "table" or type(data.zone) ~= "string" then return end
 
+  if config.rcoreTattoosCompatibility then
+    nui.sendMessage("tattooList", { zone = data.zone, tattoos = {} })
+    return
+  end
+
   local available = {}
   for _, t in ipairs(config.tattoos) do
     if t.zone == data.zone then
@@ -215,22 +220,22 @@ end)
 nui.handleMessage("appearance:addTattoo", function(data)
   if type(data) ~= "table" or type(data.collection) ~= "string" or type(data.overlay) ~= "string" then return end
 
+  if config.rcoreTattoosCompatibility then
+    ped.applyRCoreTattoos()
+    return
+  end
+
   AddPedDecorationFromHashes(cache.ped, joaat(data.collection), joaat(data.overlay))
 end)
 
 nui.handleMessage("appearance:reapplyTattoos", function(data)
   if type(data) ~= "table" then return end
 
-  ClearPedDecorations(cache.ped)
-  for _, t in ipairs(data) do
-    if t.collection and t.overlay then
-      AddPedDecorationFromHashes(cache.ped, joaat(t.collection), joaat(t.overlay))
-    end
-  end
+  ped.applyTattoos(cache.ped, data)
 end)
 
 nui.handleMessage("appearance:clearTattoos", function()
-  ClearPedDecorations(cache.ped)
+  ped.clearTattoos()
 end)
 
 nui.handleMessage("appearance:savePreset", function(data)
@@ -295,12 +300,7 @@ nui.handleMessage("appearance:applyOutfit", function(data)
   end
 
   if data.tattoos then
-    ClearPedDecorations(cache.ped)
-    for _, t in ipairs(data.tattoos) do
-      if t.collection and t.overlay then
-        AddPedDecorationFromHashes(cache.ped, joaat(t.collection), joaat(t.overlay))
-      end
-    end
+    ped.applyTattoos(cache.ped, data.tattoos)
   end
 
   if data.hair then
@@ -583,9 +583,8 @@ end
 
 if config.pedMenu and config.pedMenu.enabled then
   RegisterCommand(config.pedMenu.command or "pedmenu", function()
-    menu.allowedTabs = { "ped" }
+    menu.setAllowedTabs({ "ped" })
     menu.open()
-    nui.sendMessage("setAllowedTabs", { tabs = { "ped" } })
   end, false)
 
   if config.pedMenu.acePermission then
@@ -602,9 +601,8 @@ end, false)
 ---@param options? { tabs?: string[] }
 exports("open", function(options)
   if type(options) == "table" and options.tabs then
-    menu.allowedTabs = options.tabs
+    menu.setAllowedTabs(options.tabs)
     menu.open()
-    nui.sendMessage("setAllowedTabs", { tabs = options.tabs })
   else
     menu.allowedTabs = nil
     menu.open()

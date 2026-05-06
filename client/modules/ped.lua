@@ -19,6 +19,32 @@ for _, index in ipairs((config.overlayGroups and config.overlayGroups.makeup) or
   makeupOverlayColorTypes[index] = true
 end
 
+---@param p number
+---@param tattoo table
+local function applyTattooDecoration(p, tattoo)
+  if type(tattoo) ~= "table" or not tattoo.collection then return end
+
+  local overlay = tattoo.overlay
+  if not overlay then
+    local isMale <const> = GetEntityModel(p) == `mp_m_freemode_01`
+    overlay = isMale and tattoo.hashMale or tattoo.hashFemale
+  end
+
+  if not overlay or overlay == "" then return end
+
+  local repeats = 1
+  local opacity = tonumber(tattoo.opacity)
+  if opacity then
+    repeats = math.floor(opacity * 10)
+  end
+
+  if repeats < 1 then return end
+
+  for _ = 1, repeats do
+    AddPedDecorationFromHashes(p, joaat(tattoo.collection), joaat(overlay))
+  end
+end
+
 ---@param n number
 ---@return number
 function ped.tofloat(n)
@@ -165,6 +191,43 @@ function ped.applyModel(model)
   return true
 end
 
+function ped.applyRCoreTattoos()
+  if config.rcoreTattoosCompatibility then
+    TriggerEvent("rcore_tattoos:applyOwnedTattoos")
+  end
+end
+
+---@param p number
+---@param tattoos table?
+function ped.applyTattoos(p, tattoos)
+  ClearPedDecorations(p)
+
+  if type(tattoos) == "table" then
+    local usedArray = false
+
+    for _, tattoo in ipairs(tattoos) do
+      usedArray = true
+      applyTattooDecoration(p, tattoo)
+    end
+
+    if not usedArray then
+      for _, zoneTattoos in pairs(tattoos) do
+        if type(zoneTattoos) == "table" then
+          if zoneTattoos.collection then
+            applyTattooDecoration(p, zoneTattoos)
+          else
+            for _, tattoo in ipairs(zoneTattoos) do
+              applyTattooDecoration(p, tattoo)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  ped.applyRCoreTattoos()
+end
+
 ---@param p number
 ---@param data table
 function ped.applyAppearance(p, data)
@@ -258,12 +321,7 @@ function ped.applyAppearance(p, data)
   end
 
   if data.tattoos then
-    ClearPedDecorations(p)
-    for _, t in ipairs(data.tattoos) do
-      if t.collection and t.overlay then
-        AddPedDecorationFromHashes(p, joaat(t.collection), joaat(t.overlay))
-      end
-    end
+    ped.applyTattoos(p, data.tattoos)
   end
 
   if data.walkStyle ~= nil then
@@ -392,8 +450,9 @@ function ped.quickEdit(data)
   end
 end
 
-function ped.clearTattoos()
-  ClearPedDecorations(cache.ped)
+---@param p number?
+function ped.clearTattoos(p)
+  ped.applyTattoos(p or cache.ped, {})
 end
 
 ---@param value string?

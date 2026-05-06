@@ -99,12 +99,7 @@ function outfitwheel.applyOutfit(outfit)
   end
 
   if data.tattoos then
-    ClearPedDecorations(p)
-    for _, t in ipairs(data.tattoos) do
-      if t.collection and t.overlay then
-        AddPedDecorationFromHashes(p, joaat(t.collection), joaat(t.overlay))
-      end
-    end
+    ped.applyTattoos(p, data.tattoos)
   end
 
   logger.debug("Outfit applied via wheel:", outfit.name)
@@ -152,12 +147,7 @@ function outfitwheel.loadJobOutfit(jobName)
   end
 
   if outfitData.tattoos then
-    ClearPedDecorations(cache.ped)
-    for _, t in ipairs(outfitData.tattoos) do
-      if t.collection and t.overlay then
-        AddPedDecorationFromHashes(cache.ped, joaat(t.collection), joaat(t.overlay))
-      end
-    end
+    ped.applyTattoos(cache.ped, outfitData.tattoos)
   end
 
   logger.debug("Job outfit loaded for:", jobName)

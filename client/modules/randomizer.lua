@@ -51,7 +51,7 @@ function randomizer.randomize(categories)
         end
       end
     elseif cat == "tattoos" then
-      ClearPedDecorations(cache.ped)
+      ped.clearTattoos()
     end
   end
 
