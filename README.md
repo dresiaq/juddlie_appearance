@@ -6,7 +6,7 @@ A fully-featured character appearance menu for FiveM. Supports ESX, QBX, OX Core
 
 ## Dependencies
 
-These resources **must** be installed and started before `juddlie_appearance`:
+These resources are used by `juddlie_appearance`. Required resources must be installed and started first:
 
 | Resource | Required | Purpose |
 |----------|----------|---------|
@@ -18,6 +18,7 @@ These resources **must** be installed and started before `juddlie_appearance`:
 | [ox_inventory](https://github.com/CommunityOx/ox_inventory) | If using OX | Money checks/removal (used by OX bridge) |
 | [ox_target](https://github.com/CommunityOx/ox_target) | If using ox interaction | Target zones |
 | [qb-target](https://github.com/qbcore-framework/qb-target) | If using qb interaction | Target zones |
+| rcore_tattoos | Optional | Dedicated tattoo ownership/shops when rcore compatibility is enabled |
 
 ---
 
@@ -109,7 +110,10 @@ config.defaultFov = 50                       -- camera field of view
 config.invincibleDuringCustomization = true   -- god mode while menu is open
 config.freezeDuringCustomization = true       -- freeze the player in place while menu is open
 config.hideRadar = false                     -- hide minimap while menu is open
+config.rcoreTattoosCompatibility = false      -- set true if rcore_tattoos manages tattoos
 ```
+
+When `config.rcoreTattoosCompatibility` is enabled, tattoo shops/tabs are hidden from `juddlie_appearance` and rcore-owned tattoos are reapplied after appearance changes that clear ped decorations.
 
 ### Accent Color
 

@@ -50,6 +50,11 @@ config.accentColor = "blue"
 -- default camera field of view when the menu opens
 config.defaultFov = 50
 
+-- only set this to true if you're using rcore_tattoos
+-- when enabled, juddlie_appearance hides its tattoo shops/tabs and reapplies
+-- rcore-owned tattoos after appearance changes that clear ped decorations
+config.rcoreTattoosCompatibility = false
+
 -- make the player invincible while the appearance menu is open
 -- prevents them from being killed during customization
 config.invincibleDuringCustomization = true
