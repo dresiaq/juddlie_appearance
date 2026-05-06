@@ -11,6 +11,22 @@ local nui = {}
 nui.ready = false
 nui.visible = false
 
+---@return table
+local function getRandomizerCategories()
+  if not config.rcoreTattoosCompatibility then
+    return config.randomizerCategories
+  end
+
+  local categories = {}
+  for _, category in ipairs(config.randomizerCategories or {}) do
+    if category.key ~= "tattoos" then
+      categories[#categories + 1] = category
+    end
+  end
+
+  return categories
+end
+
 ---@return boolean
 function nui.isVisible()
   return nui.visible
@@ -66,10 +82,10 @@ nui.handleMessage("ready", function()
     accessoryComponentIds = config.accessoryComponentIds,
     propLabels = config.propLabels,
     propIds = config.propIds,
-    tattooZones = config.tattooZones,
+    tattooZones = config.rcoreTattoosCompatibility and {} or config.tattooZones,
     faceRegions = config.faceRegions,
     quickSlots = config.quickSlots,
-    randomizerCategories = config.randomizerCategories,
+    randomizerCategories = getRandomizerCategories(),
     walkStyles = config.walkStyles or {},
     walkStyleCategories = config.walkStyleCategories or {},
     pedModels = config.pedModels,
@@ -84,6 +100,7 @@ nui.handleMessage("ready", function()
     marketplace = config.marketplace or {},
     share = config.share or {},
     dropTierColors = config.drops and config.drops.tierColors or {},
+    rcoreTattoosCompatibility = config.rcoreTattoosCompatibility == true,
   })
 end)
 

@@ -12,6 +12,12 @@ local zones = {}
 
 local blips = {}
 
+---@param location table?
+---@return boolean
+local function usesRCoreTattoos(location)
+  return config.rcoreTattoosCompatibility == true and location ~= nil and location.type == "tattoo"
+end
+
 ---@param location table
 ---@return string
 local function getInteractLabel(location)
@@ -21,6 +27,7 @@ end
 ---@param location table
 local function openAtLocation(location)
   if menu.active then return end
+  if usesRCoreTattoos(location) then return end
 
   if location.job then
     local playerJob, playerGrade = framework.getPlayerJob()
@@ -46,8 +53,9 @@ local function openAtLocation(location)
     end
   end
 
-  if location.tabs then
-    nui.sendMessage("setAllowedTabs", { tabs = location.tabs })
+  local allowedTabs <const> = menu.filterAllowedTabs(location.tabs)
+  if allowedTabs and #allowedTabs == 0 then
+    return
   end
 
   if location.type and config.prices and config.prices[location.type] and config.prices[location.type] > 0 then
@@ -59,7 +67,7 @@ local function openAtLocation(location)
   end
 
   menu.shopType = location.type or nil
-  menu.allowedTabs = location.tabs or nil
+  menu.allowedTabs = allowedTabs
   logger.debug("Opening menu at location:", location.label)
   menu.open()
 end
@@ -68,6 +76,7 @@ function zones.setupBlips()
   for i = 1, #config.locations do
     local loc <const> = config.locations[i]
     if not loc.blip then goto continue end
+    if usesRCoreTattoos(loc) then goto continue end
 
     local blip <const> = AddBlipForCoord(loc.coords.x, loc.coords.y, loc.coords.z)
     SetBlipSprite(blip, loc.blip.sprite or config.defaultBlip.sprite or 1)
@@ -111,6 +120,7 @@ function zones.setupPoints()
     if not interaction.addPoint then goto continue end
 
     local loc <const> = config.locations[i]
+    if usesRCoreTattoos(loc) then goto continue end
 
     interaction.addPoint(
       loc.coords,
@@ -151,6 +161,7 @@ function zones.setupTarget()
     if not interaction.addZone then goto continue end
 
     local loc <const> = config.locations[i]
+    if usesRCoreTattoos(loc) then goto continue end
     local id <const> = ("appearance_loc_%d"):format(i)
 
     interaction.addZone(

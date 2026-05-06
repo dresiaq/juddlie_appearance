@@ -13,8 +13,51 @@ menu.originalAppearance = nil
 menu.allowedTabs = nil
 menu.shopType = nil
 
+local defaultTabs <const> = {
+  "ped", "face", "hair", "clothing", "props", "tattoos", "colors", "walkstyle", "accessories",
+  "presets", "outfits", "wardrobe", "marketplace", "drops", "camera", "history", "randomizer", "animations",
+}
+
+---@param tabs string[]?
+---@return string[]?
+function menu.filterAllowedTabs(tabs)
+  if not config.rcoreTattoosCompatibility then return tabs end
+
+  local source <const> = tabs or defaultTabs
+  local filtered = {}
+
+  for _, tab in ipairs(source) do
+    if tab ~= "tattoos" then
+      filtered[#filtered + 1] = tab
+    end
+  end
+
+  return filtered
+end
+
+---@param tabs string[]?
+---@return string[]?
+function menu.setAllowedTabs(tabs)
+  menu.allowedTabs = menu.filterAllowedTabs(tabs)
+
+  if menu.allowedTabs then
+    nui.sendMessage("setAllowedTabs", { tabs = menu.allowedTabs })
+  end
+
+  return menu.allowedTabs
+end
+
 function menu.open()
   if menu.active then return end
+
+  local allowedTabs <const> = menu.filterAllowedTabs(menu.allowedTabs)
+  if allowedTabs and #allowedTabs == 0 then
+    logger.warn("No available appearance tabs after compatibility filtering")
+    menu.allowedTabs = nil
+    return
+  end
+
+  menu.allowedTabs = allowedTabs
 
   logger.debug("Opening appearance menu")
   menu.active = true
@@ -30,6 +73,9 @@ function menu.open()
   nui.sendMessage("setAppearance", menu.originalAppearance)
   nui.sendMessage("setMaxValues", ped.getMaxValues(cache.ped))
   nui.sendMessage("setShopType", { shopType = menu.shopType })
+  if menu.allowedTabs then
+    nui.sendMessage("setAllowedTabs", { tabs = menu.allowedTabs })
+  end
 
   local userPresets <const> = lib.callback.await("juddlie_appearance:server:getPresets", false)
   if userPresets then
