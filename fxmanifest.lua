@@ -5,7 +5,7 @@ lua54 "yes"
 ui_page "web/build/index.html"
 
 author "juddlie"
-version "1.2.1"
+version "1.2.2"
 
 shared_scripts {
 	"@ox_lib/init.lua",
