@@ -19,9 +19,27 @@ local function usesRCoreTattoos(location)
 end
 
 ---@param location table
+---@param fallback string
+---@return string
+local function getLocationLabel(location, fallback)
+  if location.labelLocale then
+    local translated <const> = locale.t(location.labelLocale)
+    if translated ~= location.labelLocale then return translated end
+  end
+
+  if location.type then
+    local key <const> = "ui.locations." .. location.type
+    local translated <const> = locale.t(key)
+    if translated ~= key then return translated end
+  end
+
+  return location.label or fallback
+end
+
+---@param location table
 ---@return string
 local function getInteractLabel(location)
-  return ("[E] %s"):format(location.label or "Open Appearance")
+  return ("[E] %s"):format(getLocationLabel(location, locale.t("ui.locations.open_appearance")))
 end
 
 ---@param location table
@@ -85,7 +103,7 @@ function zones.setupBlips()
     SetBlipColour(blip, loc.blip.color or config.defaultBlip.color or 0)
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentSubstringPlayerName(loc.blip.label or loc.label or "Appearance")
+    AddTextComponentSubstringPlayerName(getLocationLabel(loc, loc.blip.label or locale.t("ui.sidebar.appearance")))
     EndTextCommandSetBlipName(blip)
 
     blips[#blips + 1] = blip
@@ -104,7 +122,7 @@ function zones.setupBlips()
     SetBlipColour(blip, room.blip.color or config.defaultBlip.color or 0)
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentSubstringPlayerName(room.blip.label or room.label or "Locker Room")
+    AddTextComponentSubstringPlayerName(getLocationLabel(room, room.blip.label or locale.t("ui.locations.locker_room")))
     EndTextCommandSetBlipName(blip)
 
     blips[#blips + 1] = blip

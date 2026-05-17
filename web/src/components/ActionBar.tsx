@@ -67,7 +67,7 @@ const ActionBar: React.FC<ActionBarProps> = ({ onSavePreset, onSaveOutfit }) => 
 	const pushEntry = useHistory((s) => s.pushEntry);
 
 	const handleApply = () => {
-		pushEntry("Apply changes", current);
+		pushEntry(t("ui.history.apply_changes"), current);
 		apply();
 		fetchNui("appearance:apply", current);
 	};

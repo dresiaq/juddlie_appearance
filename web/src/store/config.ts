@@ -49,6 +49,8 @@ export interface ShareConfig {
 export interface PedModelOption {
 	value: string;
 	label: string;
+	hidden?: boolean;
+	setpedOnly?: boolean;
 }
 
 export interface ConfigState {
@@ -81,6 +83,7 @@ export interface ConfigState {
 	pedModels: PedModelOption[];
 	pedMenuPedModels: PedModelOption[] | null;
 	pedMenuActive: boolean;
+	assignedPed: PedModelOption | null;
 	disabledComponents: number[];
 	disabledProps: number[];
 	allowedTabs: string[] | null;
@@ -96,6 +99,7 @@ export interface ConfigState {
 	setAllowedTabs: (tabs: string[] | null) => void;
 	setShopType: (shopType: string | null) => void;
 	setPedMenuActive: (active: boolean) => void;
+	setPedAssignment: (assignment: PedModelOption | null) => void;
 }
 
 export const useConfig = create<ConfigState>((set) => ({
@@ -136,6 +140,7 @@ export const useConfig = create<ConfigState>((set) => ({
 	pedModels: [],
 	pedMenuPedModels: null,
 	pedMenuActive: false,
+	assignedPed: null,
 	disabledComponents: [],
 	disabledProps: [],
 	allowedTabs: null,
@@ -151,4 +156,5 @@ export const useConfig = create<ConfigState>((set) => ({
 	setAllowedTabs: (tabs) => set({ allowedTabs: tabs }),
 	setShopType: (shopType) => set({ shopType }),
 	setPedMenuActive: (active) => set({ pedMenuActive: active }),
+	setPedAssignment: (assignment) => set({ assignedPed: assignment }),
 }));

@@ -17,11 +17,82 @@ locale.init()
 
 local limits <const> = config.limits or {}
 local uniformsCfg <const> = config.factionUniforms or {}
+local pedAssignmentCfg <const> = config.pedAssignments or {}
 
 local maxPresets <const> = limits.maxPresets or 50
 local maxOutfits <const> = limits.maxOutfits or 50
 local maxJsonSize <const> = limits.maxPayloadSize or 100000
 local maxUniforms <const> = uniformsCfg.maxPerFaction or 25
+
+---@param src number
+---@param ace string|boolean|nil
+---@return boolean
+local function hasAcePermission(src, ace)
+  if src == 0 then return true end
+  if not ace then return true end
+  if type(ace) ~= "string" then return true end
+
+  return IsPlayerAceAllowed(tostring(src), ace)
+end
+
+---@param entry any
+---@return string? model
+---@return string? label
+local function readPedModelEntry(entry)
+  if type(entry) == "string" then
+    return entry, entry
+  end
+
+  if type(entry) == "table" then
+    local model <const> = entry.value or entry.model
+    if type(model) == "string" and model ~= "" then
+      if entry.labelLocale then
+        local translated <const> = locale.t(entry.labelLocale)
+        if translated ~= entry.labelLocale then return model, translated end
+      end
+
+      return model, entry.label or model
+    end
+  end
+
+  return nil, nil
+end
+
+---@param model string
+---@return table? entry
+local function findAssignablePedModel(model)
+  if type(model) ~= "string" or model == "" then return nil end
+
+  local wanted <const> = model:lower()
+  local lists <const> = { config.pedModels or {}, config.setPedModels or {} }
+
+  for _, list in ipairs(lists) do
+    for _, entry in ipairs(list) do
+      local value, label = readPedModelEntry(entry)
+      if value and value:lower() == wanted then
+        return { value = value, label = label or value }
+      end
+    end
+  end
+
+  if pedAssignmentCfg.requireConfiguredModel == false then
+    return { value = model, label = model }
+  end
+
+  return nil
+end
+
+---@param source number
+---@param message string
+---@param kind? string
+local function notifyAdmin(source, message, kind)
+  if source == 0 then
+    print(("[juddlie_appearance] %s"):format(message))
+    return
+  end
+
+  lib.notify(source, { title = locale.t("ui.admin.title"), description = message, type = kind or "info" })
+end
 
 ---@param value any
 ---@param expectedType string
@@ -80,6 +151,11 @@ RegisterNetEvent("juddlie_appearance:server:saveAppearance", function(appearance
   end
 
   logger.debug("Saving appearance for player:", source)
+
+  local assignedPed <const> = cache.getPedAssignment(source)
+  if assignedPed then
+    appearance.model = assignedPed.model
+  end
 
   if blacklist and blacklist.validateAppearance then
     local playerData <const> = bridge.getPlayerData(source) or {}
@@ -285,7 +361,7 @@ RegisterNetEvent("juddlie_appearance:server:adminRequestAppearance", function(ta
   end
 
   logger.info("Admin", source, "requested appearance for player:", targetId)
-  TriggerClientEvent("juddlie_appearance:client:adminOpenEditor", targetId, targetId, targetAppearance)
+  TriggerClientEvent("juddlie_appearance:client:adminOpenEditor", source, targetId, targetAppearance)
 end)
 
 ---@param targetSrc number
@@ -308,8 +384,81 @@ RegisterNetEvent("juddlie_appearance:server:adminSaveAppearance", function(targe
   logger.info("Admin", source, "saving appearance for player:", targetId)
   cache.setAppearance(targetId, appearance)
 
-  TriggerClientEvent("juddlie_appearance:client:applyAppearance", targetId, appearance)
+  TriggerClientEvent("juddlie_appearance:client:applyAppearance", targetId, cache.getAppearance(targetId) or appearance)
 end)
+
+if pedAssignmentCfg.enabled ~= false then
+  RegisterCommand(pedAssignmentCfg.setCommand or "setped", function(source, args)
+    if not hasAcePermission(source, pedAssignmentCfg.acePermission or (config.admin and config.admin.acePermission)) then
+      notifyAdmin(source, locale.t("notify.admin_no_permission"), "error")
+      return
+    end
+
+    local targetId <const> = tonumber(args[1])
+    local model <const> = args[2]
+
+    if not targetId or not model then
+      notifyAdmin(source, locale.t("notify.ped_assignment_usage", pedAssignmentCfg.setCommand or "setped"), "error")
+      return
+    end
+
+    if not GetPlayerName(targetId) then
+      notifyAdmin(source, locale.t("notify.admin_player_not_found"), "error")
+      return
+    end
+
+    local pedEntry <const> = findAssignablePedModel(model)
+    if not pedEntry then
+      notifyAdmin(source, locale.t("notify.ped_invalid_model", model), "error")
+      return
+    end
+
+    local assignedBy = "console"
+    if source ~= 0 then
+      assignedBy = bridge.getIdentifier(source) or tostring(source)
+    end
+
+    if not cache.setPedAssignment(targetId, { model = pedEntry.value, label = pedEntry.label }, assignedBy) then
+      notifyAdmin(source, locale.t("notify.admin_load_failed"), "error")
+      return
+    end
+
+    local appearance = cache.getAppearance(targetId) or { model = pedEntry.value }
+    appearance.model = pedEntry.value
+
+    TriggerClientEvent("juddlie_appearance:client:setPedAssignment", targetId, pedEntry, appearance)
+    TriggerClientEvent("juddlie_appearance:client:applyAppearance", targetId, appearance)
+
+    logger.info("Admin", source, "assigned ped", pedEntry.value, "to player", targetId)
+    notifyAdmin(source, locale.t("notify.ped_assigned", targetId, pedEntry.label), "success")
+    lib.notify(targetId, { title = locale.t("ui.admin.title"), description = locale.t("notify.ped_assignment_received", pedEntry.label), type = "info" })
+  end, false)
+
+  RegisterCommand(pedAssignmentCfg.clearCommand or "clearped", function(source, args)
+    if not hasAcePermission(source, pedAssignmentCfg.acePermission or (config.admin and config.admin.acePermission)) then
+      notifyAdmin(source, locale.t("notify.admin_no_permission"), "error")
+      return
+    end
+
+    local targetId <const> = tonumber(args[1])
+    if not targetId then
+      notifyAdmin(source, locale.t("notify.ped_clear_usage", pedAssignmentCfg.clearCommand or "clearped"), "error")
+      return
+    end
+
+    if not GetPlayerName(targetId) then
+      notifyAdmin(source, locale.t("notify.admin_player_not_found"), "error")
+      return
+    end
+
+    cache.clearPedAssignment(targetId)
+    TriggerClientEvent("juddlie_appearance:client:setPedAssignment", targetId, nil, cache.getAppearance(targetId))
+
+    logger.info("Admin", source, "cleared ped assignment for player", targetId)
+    notifyAdmin(source, locale.t("notify.ped_cleared", targetId), "success")
+    lib.notify(targetId, { title = locale.t("ui.admin.title"), description = locale.t("notify.ped_assignment_cleared"), type = "info" })
+  end, false)
+end
 
 RegisterNetEvent("juddlie_appearance:server:chargeCustomer", function(shopType)
   local source <const> = source
@@ -374,7 +523,7 @@ RegisterNetEvent("juddlie_appearance:server:adminUpsertDrop", function(payload)
     return
   end
 
-  local identifier <const> = identifierOf(source); if not identifier then return end
+  local identifier <const> = bridge.getIdentifier(source); if not identifier then return end
   drops.upsert(identifier, payload or {})
 end)
 
@@ -436,6 +585,15 @@ lib.callback.register("juddlie_appearance:server:getAppearance", function(source
 
   logger.debug("Callback: getAppearance for player:", source)
   return cache.getAppearance(source)
+end)
+
+---@param source number
+---@return table?
+lib.callback.register("juddlie_appearance:server:getPedAssignment", function(source)
+  local source <const> = source
+  if not source then return end
+
+  return cache.getPedAssignment(source)
 end)
 
 ---@param source number
@@ -733,8 +891,41 @@ end)
 ---@param listing table
 ---@return boolean
 exports("listOutfitOnMarketplace", function(src, listing)
-  local identifier <const> = identifierOf(src); if not identifier then return false end
+  local identifier <const> = bridge.getIdentifier(src); if not identifier then return false end
   local ok = marketplace.list(identifier, GetPlayerName(src), listing or {})
+
+  return ok
+end)
+
+---@param src number
+---@return table?
+exports("getPlayerPedAssignment", function(src)
+  return cache.getPedAssignment(src)
+end)
+
+---@param src number
+---@param model string
+---@param label string?
+---@return boolean
+exports("setPlayerPedAssignment", function(src, model, label)
+  local pedEntry <const> = findAssignablePedModel(model) or { value = model, label = label or model }
+  local ok <const> = cache.setPedAssignment(src, { model = pedEntry.value, label = label or pedEntry.label }, "export")
+  if ok then
+    local appearance = cache.getAppearance(src) or { model = pedEntry.value }
+    TriggerClientEvent("juddlie_appearance:client:setPedAssignment", src, { value = pedEntry.value, label = label or pedEntry.label }, appearance)
+    TriggerClientEvent("juddlie_appearance:client:applyAppearance", src, appearance)
+  end
+
+  return ok
+end)
+
+---@param src number
+---@return boolean
+exports("clearPlayerPedAssignment", function(src)
+  local ok <const> = cache.clearPedAssignment(src)
+  if ok then
+    TriggerClientEvent("juddlie_appearance:client:setPedAssignment", src, nil, cache.getAppearance(src))
+  end
 
   return ok
 end)

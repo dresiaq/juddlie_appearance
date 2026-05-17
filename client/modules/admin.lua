@@ -25,6 +25,11 @@ function admin.openForPlayer(targetSrc, targetAppearance)
   logger.info("Admin editing appearance for player:", targetSrc)
   lib.notify({ title = locale.t("ui.admin.title"), description = locale.t("ui.admin.editing", targetSrc), type = "info" })
 
+  if targetAppearance.model then
+    ped.applyModel(targetAppearance.model)
+  end
+  ped.applyAppearance(cache.ped, targetAppearance)
+
   menu.open()
   menu.originalAppearance = targetAppearance
   nui.sendMessage("setAppearance", targetAppearance)
@@ -49,6 +54,9 @@ function admin.close()
 
   local ourAppearance <const> = lib.callback.await("juddlie_appearance:server:getAppearance", false)
   if ourAppearance then
+    if ourAppearance.model then
+      ped.applyModel(ourAppearance.model)
+    end
     ped.applyAppearance(cache.ped, ourAppearance)
   end
 

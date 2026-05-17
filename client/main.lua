@@ -27,10 +27,26 @@ local drops <const> = require("client.modules.drops")
 local wardrobe <const> = require("client.modules.wardrobe")
 
 local initialSpawn = true
+local assignedPedModel = nil
+
+---@param assignment table?
+local function setAssignedPed(assignment)
+  assignedPedModel = assignment and (assignment.model or assignment.value) or nil
+  nui.sendMessage("setPedAssignment", assignment or {})
+end
+
+---@return table?
+local function refreshPedAssignment()
+  local assignment <const> = lib.callback.await("juddlie_appearance:server:getPedAssignment", false)
+  setAssignedPed(assignment)
+
+  return assignment
+end
 
 ---@param model string
 ---@return boolean
 local function isPedMenuModelAllowed(model)
+  if assignedPedModel and model ~= assignedPedModel then return false end
   if not menu.pedMenuActive then return true end
 
   local pedMenuModels <const> = config.pedMenu and config.pedMenu.models
@@ -48,7 +64,13 @@ end
 local function initAppearance()
   logger.debug("Fetching appearance from server")
 
-  local appearance <const> = lib.callback.await("juddlie_appearance:server:getAppearance", false)
+  local assignedPed <const> = refreshPedAssignment()
+
+  local appearance = lib.callback.await("juddlie_appearance:server:getAppearance", false)
+  if not appearance and assignedPed then
+    appearance = { model = assignedPed.model or assignedPed.value }
+  end
+
   if not appearance then
     logger.warn("No appearance data returned from server")
     return
@@ -73,6 +95,20 @@ RegisterNetEvent("juddlie_appearance:client:applyAppearance", function(data)
   ped.applyAppearance(cache.ped, data)
 end)
 
+---@param assignment table?
+---@param appearance table?
+RegisterNetEvent("juddlie_appearance:client:setPedAssignment", function(assignment, appearance)
+  setAssignedPed(assignment)
+
+  if type(appearance) == "table" then
+    if appearance.model then
+      ped.applyModel(appearance.model)
+    end
+
+    ped.applyAppearance(cache.ped, appearance)
+  end
+end)
+
 ---@param targetSrc number
 ---@param targetAppearance table
 RegisterNetEvent("juddlie_appearance:client:adminOpenEditor", function(targetSrc, targetAppearance)
@@ -84,6 +120,7 @@ nui.handleMessage("appearance:setModel", function(data)
 
   if not isPedMenuModelAllowed(data.model) then
     logger.warn("Ped model is not allowed in pedmenu: " .. data.model)
+    lib.notify({ title = locale.t("ui.ped.title"), description = locale.t("notify.ped_restricted"), type = "error" })
     return
   end
 
@@ -122,6 +159,7 @@ end)
 
 nui.handleMessage("appearance:exit", function()
   logger.debug("NUI exit requested")
+  TriggerEvent("juddlie_appearance:client:appearanceCancelled")
   menu.close(false)
 end)
 
@@ -129,6 +167,10 @@ nui.handleMessage("appearance:apply", function(data)
   if type(data) ~= "table" then return end
 
   logger.debug("Applying and saving appearance")
+  if assignedPedModel then
+    data.model = assignedPedModel
+  end
+
   if data.model then
     ped.applyModel(data.model)
   end
@@ -136,6 +178,7 @@ nui.handleMessage("appearance:apply", function(data)
   menu.originalAppearance = ped.getAppearance(cache.ped)
 
   TriggerServerEvent("juddlie_appearance:server:saveAppearance", menu.originalAppearance)
+  TriggerEvent("juddlie_appearance:client:appearanceApplied", menu.originalAppearance)
 
   if menu.shopType then
     TriggerServerEvent("juddlie_appearance:server:chargeCustomer", menu.shopType)

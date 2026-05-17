@@ -48,6 +48,72 @@
       "save": "Save",
       "import": "Import"
     },
+    "locations": {
+      "open_appearance": "Open Appearance",
+      "locker_room": "Locker Room",
+      "clothing_store": "Clothing Store",
+      "barber": "Barber Shop",
+      "tattoo": "Tattoo Parlor",
+      "surgeon": "Plastic Surgeon"
+    },
+    "components": {
+      "0": "Head",
+      "1": "Mask",
+      "2": "Hair",
+      "3": "Upper Body",
+      "4": "Lower Body",
+      "5": "Bags",
+      "6": "Shoes",
+      "7": "Accessories",
+      "8": "Undershirt",
+      "9": "Armor",
+      "10": "Decals",
+      "11": "Tops"
+    },
+    "prop_labels": {
+      "0": "Hat",
+      "1": "Glasses",
+      "2": "Ears",
+      "6": "Watch",
+      "7": "Bracelet"
+    },
+    "overlays": {
+      "blemishes": "Blemishes",
+      "facial_hair": "Facial Hair",
+      "eyebrows": "Eyebrows",
+      "ageing": "Ageing",
+      "makeup": "Makeup",
+      "blush": "Blush",
+      "complexion": "Complexion",
+      "sun_damage": "Sun Damage",
+      "lipstick": "Lipstick",
+      "moles_freckles": "Moles/Freckles",
+      "chest_hair": "Chest Hair",
+      "body_blemishes": "Body Blemishes",
+      "add_body_blemishes": "Add Body Blemishes"
+    },
+    "face_features": {
+      "noseWidth": "Nose Width",
+      "nosePeakHeight": "Nose Peak Height",
+      "nosePeakLength": "Nose Peak Length",
+      "noseBoneHeight": "Nose Bone Height",
+      "nosePeakLowering": "Nose Peak Lowering",
+      "noseBoneTwist": "Nose Bone Twist",
+      "eyebrowHeight": "Eyebrow Height",
+      "eyebrowDepth": "Eyebrow Depth",
+      "cheekboneHeight": "Cheekbone Height",
+      "cheekboneWidth": "Cheekbone Width",
+      "cheekWidth": "Cheek Width",
+      "eyeOpening": "Eye Opening",
+      "lipThickness": "Lip Thickness",
+      "jawBoneWidth": "Jaw Bone Width",
+      "jawBoneLength": "Jaw Bone Length",
+      "chinBoneHeight": "Chin Bone Height",
+      "chinBoneLength": "Chin Bone Length",
+      "chinBoneWidth": "Chin Bone Width",
+      "chinHole": "Chin Hole",
+      "neckThickness": "Neck Thickness"
+    },
     "face": {
       "title": "Face Features",
       "heritage": "Heritage",
@@ -238,7 +304,12 @@
       "cycle_until_liked": "Cycle Until Liked",
       "speed_seconds": "Speed (seconds)",
       "stop": "Stop",
-      "start_cycling": "Start Cycling"
+      "start_cycling": "Start Cycling",
+      "category_face": "Face",
+      "category_hair": "Hair",
+      "category_clothing": "Clothing",
+      "category_props": "Props",
+      "category_tattoos": "Tattoos"
     },
     "animations": {
       "title": "Animations",
@@ -248,7 +319,12 @@
       "walk": "Walk",
       "run": "Run",
       "crouch": "Crouch",
-      "sit": "Sit"
+      "sit": "Sit",
+      "idle_desc": "Standing still",
+      "walk_desc": "Walking forward",
+      "run_desc": "Running forward",
+      "crouch_desc": "Crouching position",
+      "sit_desc": "Sitting on ground"
     },
     "walkstyle": {
       "title": "Walk Style",
@@ -262,6 +338,37 @@
       "category_impaired": "Impaired",
       "category_professional": "Professional",
       "category_special": "Special"
+    },
+    "walkstyles": {
+      "default": "Default",
+      "brave": "Brave",
+      "confident": "Confident",
+      "hurry": "Hurry",
+      "business": "Business",
+      "tough_guy": "Tough Guy",
+      "gangster": "Gangster",
+      "posh": "Posh",
+      "sexy": "Sexy",
+      "heels": "Heels",
+      "arrogant": "Arrogant",
+      "sad": "Sad",
+      "intimidation": "Intimidation",
+      "drunk": "Drunk",
+      "injured": "Injured",
+      "hipster": "Hipster",
+      "hobo": "Hobo",
+      "money": "Money",
+      "quick": "Quick",
+      "fat": "Heavy",
+      "swagger": "Swagger",
+      "muscle": "Muscle",
+      "femme": "Femme",
+      "cop": "Cop",
+      "alien": "Alien",
+      "maneater": "Maneater",
+      "chichi": "Chichi",
+      "sassy": "Sassy",
+      "depressed": "Depressed"
     },
     "accessories": {
       "title": "Accessories",
@@ -279,8 +386,15 @@
       "name_placeholder": "My Accessories",
       "saves": "Saves: %s"
     },
+    "quick_slots": {
+      "hat": "Hat",
+      "glasses": "Glasses",
+      "top": "Top",
+      "shoes": "Shoes"
+    },
     "history": {
       "title": "History",
+      "apply_changes": "Apply changes",
       "undo": "Undo",
       "redo": "Redo",
       "snapshots": "Snapshots",
@@ -442,7 +556,14 @@
       "title": "Ped Model",
       "search_placeholder": "Search models...",
       "models": "Models",
-      "no_models": "No models found."
+      "no_models": "No models found.",
+      "assigned_only": "Assigned"
+    },
+    "peds": {
+      "mp_m_freemode_01": "Freemode Male",
+      "mp_f_freemode_01": "Freemode Female",
+      "a_c_shepherd": "K9 Shepherd",
+      "a_c_rottweiler": "K9 Rottweiler"
     }
   },
   "notify": {
@@ -460,6 +581,14 @@
     "admin_player_not_found": "Player not found",
     "admin_load_failed": "Could not load target player's appearance",
     "admin_usage": "Usage: /setappearance [player id]",
+    "ped_assignment_usage": "Usage: /%s [player id] [model]",
+    "ped_clear_usage": "Usage: /%s [player id]",
+    "ped_invalid_model": "Ped model '%s' is not configured for assignment",
+    "ped_assigned": "Assigned player %s to ped %s",
+    "ped_cleared": "Cleared ped assignment for player %s",
+    "ped_assignment_received": "You have been assigned the %s ped",
+    "ped_assignment_cleared": "Your assigned ped restriction was removed",
+    "ped_restricted": "You can only use your assigned ped model",
     "not_enough_money": "You need %s%d to use this shop",
     "uniform_saved": "Uniform saved for the faction",
     "uniform_deleted": "Uniform removed",

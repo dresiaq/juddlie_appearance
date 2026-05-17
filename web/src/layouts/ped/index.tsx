@@ -46,11 +46,12 @@ const Ped: React.FC = () => {
 	const pedModels = useConfig((s) => s.pedModels);
 	const pedMenuPedModels = useConfig((s) => s.pedMenuPedModels);
 	const pedMenuActive = useConfig((s) => s.pedMenuActive);
+	const assignedPed = useConfig((s) => s.assignedPed);
 	const currentModel = useAppearance((s) => s.current.model);
 	const setModel = useAppearance((s) => s.setModel);
 
 	const accentColor = useMantineTheme().primaryColor;
-	const visiblePedModels = pedMenuActive && pedMenuPedModels ? pedMenuPedModels : pedModels;
+	const visiblePedModels = assignedPed ? [assignedPed] : (pedMenuActive && pedMenuPedModels ? pedMenuPedModels : pedModels);
 
 	const filteredModels = useMemo(() => {
 		if (!search) return visiblePedModels;
@@ -69,7 +70,7 @@ const Ped: React.FC = () => {
 		<Box className={classes.container}>
 			<Box className={classes.header}>
 				<Text size="lg" weight={700}>{t("ui.ped.title")}</Text>
-				<Badge size="sm" variant="filled">{visiblePedModels.length}</Badge>
+				<Badge size="sm" variant="filled">{assignedPed ? t("ui.ped.assigned_only") : visiblePedModels.length}</Badge>
 			</Box>
 
 			<TextInput

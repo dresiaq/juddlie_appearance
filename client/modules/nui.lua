@@ -11,10 +11,135 @@ local nui = {}
 nui.ready = false
 nui.visible = false
 
+---@param key string
+---@param fallback string
+---@return string
+local function tr(key, fallback)
+  if not localeModule then return fallback end
+
+  local value <const> = localeModule.t(key)
+  if value == key then return fallback end
+
+  return value
+end
+
+---@param entry any
+---@return boolean
+local function isSetPedOnly(entry)
+  return type(entry) == "table" and (
+    entry.setpedOnly == true
+    or entry.setPedOnly == true
+    or entry.hidden == true
+    or entry.hiddenFromCreator == true
+  )
+end
+
+---@param models table?
+---@param includeHidden boolean?
+---@return table
+local function normalizePedModels(models, includeHidden)
+  local output = {}
+
+  for _, entry in ipairs(models or {}) do
+    local value, label
+
+    if type(entry) == "string" then
+      value = entry
+      label = entry
+    elseif type(entry) == "table" then
+      value = entry.value or entry.model
+      label = entry.label or value
+      if entry.labelLocale then
+        label = tr(entry.labelLocale, label or value)
+      end
+    end
+
+    if value and (includeHidden or not isSetPedOnly(entry)) then
+      output[#output + 1] = { value = value, label = tr("ui.peds." .. value, label or value) }
+    end
+  end
+
+  return output
+end
+
+---@param list table?
+---@param prefix string
+---@param valueKey string?
+---@return table
+local function localizeOptions(list, prefix, valueKey)
+  local output = {}
+  valueKey = valueKey or "value"
+
+  for _, item in ipairs(list or {}) do
+    local copy = {}
+    for k, v in pairs(item) do copy[k] = v end
+
+    local value <const> = tostring(copy[valueKey] or copy.key or "")
+    if value ~= "" then
+      local keyPart <const> = value:gsub("%s+", "_"):lower()
+      copy.label = tr(prefix .. keyPart, copy.label or value)
+      if copy.desc then
+        copy.desc = tr(prefix .. keyPart .. "_desc", copy.desc)
+      end
+    end
+
+    output[#output + 1] = copy
+  end
+
+  return output
+end
+
+---@param labels table?
+---@param prefix string
+---@return table
+local function localizeLabelMap(labels, prefix)
+  local output = {}
+
+  for key, value in pairs(labels or {}) do
+    output[key] = tr(prefix .. tostring(key), value)
+  end
+
+  return output
+end
+
+---@return table
+local function getLocalizedOverlayLabels()
+  local keys <const> = {
+    "blemishes", "facial_hair", "eyebrows", "ageing", "makeup",
+    "blush", "complexion", "sun_damage", "lipstick", "moles_freckles",
+    "chest_hair", "body_blemishes", "add_body_blemishes",
+  }
+
+  local output = {}
+  for index, label in ipairs(config.overlayLabels or {}) do
+    output[index] = tr("ui.overlays." .. (keys[index] or tostring(index)), label)
+  end
+
+  return output
+end
+
+---@return table
+local function getLocalizedFaceRegions()
+  local output = {}
+  local regionKeys <const> = {
+    Eyes = "eyes", Nose = "nose", Cheeks = "cheeks", Jaw = "jaw",
+    Chin = "chin", Lips = "lips", Neck = "neck",
+  }
+
+  for _, region in ipairs(config.faceRegions or {}) do
+    output[#output + 1] = {
+      name = tr("ui.face." .. (regionKeys[region.name] or region.name:lower()), region.name),
+      features = region.features,
+    }
+  end
+
+  return output
+end
+
 ---@return table
 local function getRandomizerCategories()
   if not config.rcoreTattoosCompatibility then
-    return config.randomizerCategories
+    return localizeOptions(config.randomizerCategories, "ui.randomizer.category_", "key")
   end
 
   local categories = {}
@@ -24,7 +149,7 @@ local function getRandomizerCategories()
     end
   end
 
-  return categories
+  return localizeOptions(categories, "ui.randomizer.category_", "key")
 end
 
 ---@return table?
@@ -33,7 +158,12 @@ local function getPedMenuPedModels()
     return nil
   end
 
-  return config.pedMenu.models
+  return normalizePedModels(config.pedMenu.models, config.pedMenu.showSetPedOnly == true)
+end
+
+---@return table?
+local function getAssignedPed()
+  return lib.callback.await("juddlie_appearance:server:getPedAssignment", false)
 end
 
 ---@return boolean
@@ -74,33 +204,34 @@ nui.handleMessage("ready", function()
 
   nui.ready = true
   nui.sendMessage("setConfig", {
-    cameraPresets = config.cameraPresets,
-    lightingPresets = config.lightingPresets,
+    cameraPresets = localizeOptions(config.cameraPresets, "ui.camera."),
+    lightingPresets = localizeOptions(config.lightingPresets, "ui.camera."),
     cameraDefaults = config.cameraDefaults,
     cameraRanges = config.cameraRanges,
     randomizerDefaultSpeed = config.randomizerDefaultSpeed,
     randomizerSpeedRange = config.randomizerSpeedRange,
     eyeColorMax = config.eyeColorMax,
-    animations = config.animations,
-    overlayLabels = config.overlayLabels,
+    animations = localizeOptions(config.animations, "ui.animations."),
+    overlayLabels = getLocalizedOverlayLabels(),
     overlayGroups = config.overlayGroups,
     headBlendRanges = config.headBlendRanges,
-    faceFeatureLabels = config.faceFeatureLabels,
-    componentLabels = config.componentLabels,
+    faceFeatureLabels = localizeLabelMap(config.faceFeatureLabels, "ui.face_features."),
+    componentLabels = localizeLabelMap(config.componentLabels, "ui.components."),
     clothingComponentGroups = config.clothingComponentGroups,
     accessoryComponentIds = config.accessoryComponentIds,
-    propLabels = config.propLabels,
+    propLabels = localizeLabelMap(config.propLabels, "ui.prop_labels."),
     propIds = config.propIds,
-    tattooZones = config.rcoreTattoosCompatibility and {} or config.tattooZones,
-    faceRegions = config.faceRegions,
-    quickSlots = config.quickSlots,
+    tattooZones = config.rcoreTattoosCompatibility and {} or localizeOptions(config.tattooZones, "ui.tattoos."),
+    faceRegions = getLocalizedFaceRegions(),
+    quickSlots = localizeOptions(config.quickSlots, "ui.quick_slots.", "label"),
     randomizerCategories = getRandomizerCategories(),
-    walkStyles = config.walkStyles or {},
-    walkStyleCategories = config.walkStyleCategories or {},
-    pedModels = config.pedModels,
+    walkStyles = localizeOptions(config.walkStyles or {}, "ui.walkstyles."),
+    walkStyleCategories = localizeOptions(config.walkStyleCategories or {}, "ui.walkstyle.category_"),
+    pedModels = normalizePedModels(config.pedModels, false),
     pedMenuPedModels = getPedMenuPedModels(),
     pedMenuActive = false,
-    outfitCategories = config.outfitCategories,
+    assignedPed = getAssignedPed(),
+    outfitCategories = localizeOptions(config.outfitCategories, "ui.outfits."),
     locale = config.locale or "en",
     localeStrings = localeModule and localeModule.getAll() or {},
     disabledComponents = config.disabledComponents or {},

@@ -4,6 +4,27 @@ local logger <const> = require("shared.logger")
 local players = {}
 local cache = {}
 
+---@param data table?
+---@return table?
+local function clone(data)
+  if type(data) ~= "table" then return data end
+
+  local encoded <const> = json.encode(data)
+  return encoded and json.decode(encoded) or data
+end
+
+---@param appearance table?
+---@param assignment table?
+---@return table?
+local function withPedAssignment(appearance, assignment)
+  if not assignment then return appearance end
+
+  local output = clone(appearance) or {}
+  output.model = assignment.model
+
+  return output
+end
+
 ---@param src number
 ---@return table?
 function cache.load(src)
@@ -82,6 +103,11 @@ function cache.load(src)
     }
   end
 
+  local pedAssignmentRow <const> = MySQL.single.await(
+    "SELECT model, label FROM juddlie_appearance_ped_assignments WHERE identifier = ?",
+    { identifier }
+  )
+
   players[src] = {
     identifier = identifier,
     appearance = skin and json.decode(skin) or nil,
@@ -89,6 +115,10 @@ function cache.load(src)
     outfits = outfits,
     owned = owned,
     wardrobe = wardrobe,
+    pedAssignment = pedAssignmentRow and {
+      model = pedAssignmentRow.model,
+      label = pedAssignmentRow.label or pedAssignmentRow.model,
+    } or nil,
   }
 
   logger.info("Player data loaded:", src, identifier)
@@ -118,7 +148,7 @@ function cache.getAppearance(src)
   local player <const> = cache.load(src)
   if not player then return end
 
-  return player.appearance
+  return withPedAssignment(player.appearance, player.pedAssignment)
 end
 
 ---@param src number
@@ -127,7 +157,69 @@ function cache.setAppearance(src, appearance)
   local player <const> = cache.load(src)
   if not player then return end
 
-  player.appearance = appearance
+  local stored = clone(appearance) or {}
+  if player.pedAssignment then
+    stored.model = player.pedAssignment.model
+  end
+
+  player.appearance = stored
+end
+
+---@param src number
+---@return table?
+function cache.getPedAssignment(src)
+  local player <const> = cache.load(src)
+  return player and player.pedAssignment or nil
+end
+
+---@param src number
+---@param assignment { model:string, label?:string }
+---@param assignedBy string?
+---@return boolean
+function cache.setPedAssignment(src, assignment, assignedBy)
+  local player <const> = cache.load(src)
+  if not player or type(assignment) ~= "table" or type(assignment.model) ~= "string" then return false end
+
+  local stored <const> = {
+    model = assignment.model,
+    label = assignment.label or assignment.model,
+  }
+
+  player.pedAssignment = stored
+  if player.appearance then
+    player.appearance.model = stored.model
+  end
+
+  MySQL.insert(
+    [[
+      INSERT INTO juddlie_appearance_ped_assignments (identifier, model, label, assigned_by, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        model = VALUES(model),
+        label = VALUES(label),
+        assigned_by = VALUES(assigned_by),
+        updated_at = VALUES(updated_at)
+    ]],
+    { player.identifier, stored.model, stored.label, assignedBy, os.time() * 1000 }
+  )
+
+  return true
+end
+
+---@param src number
+---@return boolean
+function cache.clearPedAssignment(src)
+  local player <const> = cache.load(src)
+  if not player then return false end
+
+  player.pedAssignment = nil
+
+  MySQL.query(
+    "DELETE FROM juddlie_appearance_ped_assignments WHERE identifier = ?",
+    { player.identifier }
+  )
+
+  return true
 end
 
 ---@param src number

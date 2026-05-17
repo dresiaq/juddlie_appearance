@@ -130,6 +130,7 @@ const App: React.FC = () => {
 	const setAllowedTabs = useConfig((s) => s.setAllowedTabs);
 	const setShopType = useConfig((s) => s.setShopType);
 	const setPedMenuActive = useConfig((s) => s.setPedMenuActive);
+	const setPedAssignment = useConfig((s) => s.setPedAssignment);
 	const setLocaleStrings = useLocale((s) => s.setStrings);
 	const setLocaleName = useLocale((s) => s.setLocale);
 	const setMaxValues = useMaxValues((s) => s.setMaxValues);
@@ -146,6 +147,11 @@ const App: React.FC = () => {
 		if (data.localeStrings) {
 			setLocaleStrings(data.localeStrings);
 			delete data.localeStrings;
+		}
+		if (data.assignedPed) {
+			const assignedPed = data.assignedPed as any;
+			const value = assignedPed.value || assignedPed.model;
+			data.assignedPed = value ? { value, label: assignedPed.label || value } : null;
 		}
 		if (data.locale) {
 			setLocaleName(data.locale);
@@ -199,6 +205,11 @@ const App: React.FC = () => {
 
 	useNuiEvent("setPedMenuActive", (data?: { active?: boolean }) => {
 		setPedMenuActive(data?.active === true);
+	});
+
+	useNuiEvent("setPedAssignment", (data?: { value?: string; model?: string; label?: string }) => {
+		const value = data?.value || data?.model;
+		setPedAssignment(value ? { value, label: data?.label || value } : null);
 	});
 
 	useNuiEvent("setAllowedTabs", (data: { tabs: string[] }) => {

@@ -37,6 +37,18 @@ config.interactionType = "point"
 ---@type "license" | "license2" | "fivem" | "discord"
 config.licenseType = "license"
 
+-- optional multi-character support for the custom framework bridge.
+-- ESX/QBX/OX already return a per-character identifier when their multicharacter
+-- systems are enabled, so this is only used when config.framework = "custom".
+-- If enabled, the custom bridge appends a character id to the license identifier.
+-- You can provide that character id with either a player state bag or a function.
+config.multiCharacter = {
+	enabled = false,
+	stateBag = "characterId", -- Player(source).state.characterId
+	separator = ":",
+	-- getCharacterId = function(source) return exports.your_multichar:GetCharacterId(source) end,
+}
+
 -- language locale
 config.locale = "en"
 
@@ -150,9 +162,19 @@ config.disabledProps = {}      -- e.g. { 6, 7 } to disable watch and bracelet
 
 -- ped models available in the ped model selector page
 -- value = the model name (hash), label = display name
+-- labelLocale = optional locale key for the display name
+-- setpedOnly/hiddenFromCreator hides a model from the normal character menu.
+-- Put K9/animal peds in config.setPedModels if you only want admins to assign them.
 config.pedModels = {
 	{ value = "mp_m_freemode_01", label = "Freemode Male" },
 	{ value = "mp_f_freemode_01", label = "Freemode Female" },
+}
+
+-- ped models available to the admin /setped command but hidden from normal
+-- character creation/customization menus. Add K9 peds here, for example:
+-- { value = "a_c_shepherd", label = "K9 Shepherd" }
+-- { value = "a_c_rottweiler", label = "K9 Rottweiler" }
+config.setPedModels = {
 }
 
 -- camera position offsets for each preset
@@ -218,8 +240,9 @@ config.outfitCategories = {
 -- each location creates a map blip and an interaction point/target
 --
 -- fields:
---   type = label for your reference only (not used in code)
---   label = name shown to the player on interaction
+--   type = shop type and default locale key suffix (ui.locations.<type>)
+--   label = fallback name shown to the player on interaction
+--   labelLocale = optional explicit locale key for custom names
 --   coords = world position (vector3)
 --   radius = interaction radius in meters
 --   tabs = which menu tabs are available at this location
@@ -751,6 +774,18 @@ config.admin = {
 	-- set to false to disable permission checks (not recommended)
 	-- grant in server.cfg: add_ace group.admin admin.appearance allow
 	acePermission = "admin.appearance",
+}
+
+-- allows admins to assign and lock a player to one specific ped model.
+-- usage: /setped [player id] [model]
+--        /clearped [player id]
+-- assignable models come from config.pedModels and config.setPedModels.
+config.pedAssignments = {
+	enabled = true,
+	setCommand = "setped",
+	clearCommand = "clearped",
+	acePermission = "admin.appearance",
+	requireConfiguredModel = true,
 }
 
 -- faction uniform system

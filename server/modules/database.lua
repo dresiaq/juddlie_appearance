@@ -162,5 +162,16 @@ MySQL.ready(function()
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ]])
 
+  MySQL.query.await([[
+    CREATE TABLE IF NOT EXISTS `juddlie_appearance_ped_assignments` (
+      `identifier`  VARCHAR(60)  NOT NULL,
+      `model`       VARCHAR(80)  NOT NULL,
+      `label`       VARCHAR(100) DEFAULT NULL,
+      `assigned_by` VARCHAR(60)  DEFAULT NULL,
+      `updated_at`  BIGINT       NOT NULL,
+      PRIMARY KEY (`identifier`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ]])
+
   addColumnIfMissing("juddlie_appearance_outfits", "tags", "`tags` TEXT DEFAULT NULL")
 end)
