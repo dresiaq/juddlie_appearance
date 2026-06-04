@@ -3,7 +3,6 @@ local logger <const> = require("shared.logger")
 local locale <const> = require("shared.locale")
 
 local menu <const> = require("client.modules.menu")
-local nui <const> = require("client.modules.nui")
 
 local framework <const> = require("bridge").get("framework")
 local interaction = require("bridge").get("interaction")
@@ -14,7 +13,7 @@ local blips = {}
 
 ---@param location table?
 ---@return boolean
-local function usesRCoreTattoos(location)
+local function rCoreEnabled(location)
   return config.rcoreTattoosCompatibility == true and location ~= nil and location.type == "tattoo"
 end
 
@@ -28,7 +27,7 @@ local function getLocationLabel(location, fallback)
   end
 
   if location.type then
-    local key <const> = "ui.locations." .. location.type
+    local key <const> = ("ui.locations.%s"):format(location.type)
     local translated <const> = locale.t(key)
     if translated ~= key then return translated end
   end
@@ -45,7 +44,7 @@ end
 ---@param location table
 local function openAtLocation(location)
   if menu.active then return end
-  if usesRCoreTattoos(location) then return end
+  if rCoreEnabled(location) then return end
 
   if location.job then
     local playerJob, playerGrade = framework.getPlayerJob()
@@ -94,7 +93,7 @@ function zones.setupBlips()
   for i = 1, #config.locations do
     local loc <const> = config.locations[i]
     if not loc.blip then goto continue end
-    if usesRCoreTattoos(loc) then goto continue end
+    if rCoreEnabled(loc) then goto continue end
 
     local blip <const> = AddBlipForCoord(loc.coords.x, loc.coords.y, loc.coords.z)
     SetBlipSprite(blip, loc.blip.sprite or config.defaultBlip.sprite or 1)
@@ -138,7 +137,7 @@ function zones.setupPoints()
     if not interaction.addPoint then goto continue end
 
     local loc <const> = config.locations[i]
-    if usesRCoreTattoos(loc) then goto continue end
+    if rCoreEnabled(loc) then goto continue end
 
     interaction.addPoint(
       loc.coords,
@@ -179,7 +178,8 @@ function zones.setupTarget()
     if not interaction.addZone then goto continue end
 
     local loc <const> = config.locations[i]
-    if usesRCoreTattoos(loc) then goto continue end
+    if rCoreEnabled(loc) then goto continue end
+    
     local id <const> = ("appearance_loc_%d"):format(i)
 
     interaction.addZone(
