@@ -14,6 +14,8 @@ const defaultHeadBlend: HeadBlend = {
 	shapeMix: 0.5, skinMix: 0.5,
 };
 
+const defaultHeadOverlay: HeadOverlay = { value: -1, opacity: 1, firstColor: 0, secondColor: 0 };
+
 export const defaultAppearance: AppearanceData = {
 	model: "",
 	headBlend: defaultHeadBlend,
@@ -81,7 +83,7 @@ export const useAppearance = create<AppearanceState>((set) => ({
 
 	setHeadOverlay: (index, overlay) => set((s) => {
 		const overlays = [...s.current.headOverlays];
-		overlays[index] = { ...overlays[index], ...overlay };
+		overlays[index] = { ...defaultHeadOverlay, ...overlays[index], ...overlay };
 		return { current: { ...s.current, headOverlays: overlays }, dirty: true };
 	}),
 

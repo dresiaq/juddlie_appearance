@@ -19,6 +19,34 @@ for _, index in ipairs((config.overlayGroups and config.overlayGroups.makeup) or
   makeupOverlayColorTypes[index] = true
 end
 
+---@return string
+local function getConfiguredDefaultModel()
+  if type(config.defaultCreatorModel) == "string" and config.defaultCreatorModel ~= "" then
+    return config.defaultCreatorModel
+  end
+
+  local firstModel <const> = config.pedModels and config.pedModels[1]
+  if type(firstModel) == "table" and type(firstModel.value) == "string" and firstModel.value ~= "" then
+    return firstModel.value
+  end
+
+  if type(firstModel) == "string" and firstModel ~= "" then
+    return firstModel
+  end
+
+  return "mp_m_freemode_01"
+end
+
+---@param value any
+---@param fallback number
+---@return number
+local function numberOr(value, fallback)
+  local number <const> = tonumber(value)
+  if number == nil then return fallback end
+
+  return number
+end
+
 ---@param p number
 ---@param tattoo table
 local function applyTattooDecoration(p, tattoo)
@@ -49,6 +77,57 @@ end
 ---@return number
 function ped.tofloat(n)
   return n + 0.0
+end
+
+---@return string
+function ped.getDefaultModel()
+  return getConfiguredDefaultModel()
+end
+
+---@param p number
+---@param index number
+---@return number value
+---@return number opacity
+local function getCurrentHeadOverlay(p, index)
+  local _, value, _, _, _, opacity = GetPedHeadOverlayData(p, index)
+  if value == 255 then value = -1 end
+
+  return value or -1, opacity or 1.0
+end
+
+---@param p number
+---@param index number
+---@param overlay table
+---@param forceRefresh boolean?
+local function applyHeadOverlay(p, index, overlay, forceRefresh)
+  if type(overlay) ~= "table" then return end
+
+  local currentValue, currentOpacity = getCurrentHeadOverlay(p, index)
+  local value = math.floor(numberOr(overlay.value, currentValue))
+  local opacity = math.max(0.0, math.min(1.0, numberOr(overlay.opacity, currentOpacity)))
+  local nativeValue = value
+  if nativeValue == -1 then nativeValue = 255 end
+
+  -- GTA can cache facial-hair opacity when the overlay style does not change.
+  -- Clearing first makes opacity-only slider changes take effect immediately.
+  if forceRefresh and nativeValue ~= 255 then
+    SetPedHeadOverlay(p, index, 255, 0.0)
+  end
+
+  SetPedHeadOverlay(p, index, nativeValue, ped.tofloat(opacity))
+
+  if overlay.firstColor ~= nil or overlay.secondColor ~= nil then
+    local colorType = 1
+    if makeupOverlayColorTypes[index] then colorType = 2 end
+
+    SetPedHeadOverlayColor(
+      p,
+      index,
+      colorType,
+      math.floor(numberOr(overlay.firstColor, 0)),
+      math.floor(numberOr(overlay.secondColor, 0))
+    )
+  end
 end
 
 ---@param p number
@@ -254,17 +333,7 @@ function ped.applyAppearance(p, data)
   if data.headOverlays then
     for i, overlay in ipairs(data.headOverlays) do
       local idx = i - 1
-      local val = overlay.value
-      if val == -1 then val = 255 end
-
-      SetPedHeadOverlay(p, idx, val, ped.tofloat(overlay.opacity or 1.0))
-
-      if overlay.firstColor then
-        local colorType = 1
-        if makeupOverlayColorTypes[idx] then colorType = 2 end
-
-        SetPedHeadOverlayColor(p, idx, colorType, overlay.firstColor, overlay.secondColor or 0)
-      end
+      applyHeadOverlay(p, idx, overlay)
     end
   end
 
@@ -380,17 +449,7 @@ end
 
 ---@param data table
 function ped.setOverlay(data)
-  local val = data.value
-  if val == -1 then val = 255 end
-
-  SetPedHeadOverlay(cache.ped, data.index, val, ped.tofloat(data.opacity or 1.0))
-
-  if data.firstColor then
-    local colorType = 1
-    if makeupOverlayColorTypes[data.index] then colorType = 2 end
-
-    SetPedHeadOverlayColor(cache.ped, data.index, colorType, data.firstColor, data.secondColor or 0)
-  end
+  applyHeadOverlay(cache.ped, data.index, data, true)
 end
 
 ---@param color number

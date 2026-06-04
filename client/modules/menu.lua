@@ -19,6 +19,66 @@ local defaultTabs <const> = {
   "presets", "outfits", "wardrobe", "marketplace", "drops", "camera", "history", "randomizer", "animations",
 }
 
+local initialAppearanceTabs <const> = {
+  ped = true,
+  face = true,
+  hair = true,
+  clothing = true,
+  props = true,
+  tattoos = true,
+  colors = true,
+  walkstyle = true,
+  accessories = true,
+  randomizer = true,
+}
+
+---@param tabs string[]?
+---@return boolean
+local function shouldProtectInitialAppearance(tabs)
+  if menu.pedMenuActive then return false end
+  if not tabs then return true end
+
+  for _, tab in ipairs(tabs) do
+    if initialAppearanceTabs[tab] then return true end
+  end
+
+  return false
+end
+
+---@param appearance table
+local function applyAppearanceData(appearance)
+  if type(appearance) ~= "table" then return end
+
+  if appearance.model then
+    ped.applyModel(appearance.model)
+  end
+
+  ped.applyAppearance(cache.ped, appearance)
+end
+
+---@param tabs string[]?
+---@return table? savedAppearance
+local function prepareInitialAppearance(tabs)
+  if not shouldProtectInitialAppearance(tabs) then return nil end
+
+  local savedAppearance <const> = lib.callback.await("juddlie_appearance:server:getAppearance", false)
+  if type(savedAppearance) == "table" then
+    if not ped.isFreemode(cache.ped) then
+      logger.warn("Current ped is not freemode; restoring saved appearance before opening the menu")
+      applyAppearanceData(savedAppearance)
+    end
+
+    return savedAppearance
+  end
+
+  if not ped.isFreemode(cache.ped) then
+    logger.warn("No saved appearance found and current ped is not freemode; applying default creator model")
+    ped.applyModel(ped.getDefaultModel())
+  end
+
+  return nil
+end
+
 ---@param tabs string[]?
 ---@return string[]?
 function menu.filterAllowedTabs(tabs)
@@ -69,7 +129,12 @@ function menu.open()
 
   logger.debug("Opening appearance menu")
   menu.active = true
+  local savedAppearance <const> = prepareInitialAppearance(menu.allowedTabs)
   menu.originalAppearance = ped.getAppearance(cache.ped)
+
+  if shouldProtectInitialAppearance(menu.allowedTabs) and not savedAppearance then
+    TriggerServerEvent("juddlie_appearance:server:saveAppearance", menu.originalAppearance)
+  end
 
   if config.freezeDuringCustomization ~= false then FreezeEntityPosition(cache.ped, true) end
 

@@ -72,8 +72,12 @@ local function initAppearance()
   end
 
   if not appearance then
-    logger.warn("No appearance data returned from server")
-    return
+    logger.warn("No appearance data returned from server; applying unsaved default creator model")
+    if not ped.isFreemode(cache.ped) then
+      ped.applyModel(ped.getDefaultModel())
+    end
+
+    appearance = ped.getAppearance(cache.ped)
   end
 
   logger.debug("Applying initial appearance")

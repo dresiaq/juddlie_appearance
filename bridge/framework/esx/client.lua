@@ -72,6 +72,16 @@ local function numberOr(value, fallback)
 	return number
 end
 
+---@param value any
+---@param fallback number
+---@return number
+local function opacityOr(value, fallback)
+	local opacity <const> = numberOr(value, fallback)
+	if opacity > 1.0 then return math.max(0.0, math.min(1.0, opacity / 10.0)) end
+
+	return math.max(0.0, math.min(1.0, opacity))
+end
+
 ---@param oldSkin table
 ---@return table
 local function convertLegacySkin(oldSkin)
@@ -106,7 +116,7 @@ local function convertLegacySkin(oldSkin)
 		local value = numberOr(oldSkin[map.value], -1)
 		converted.headOverlays[#converted.headOverlays + 1] = {
 			value = value,
-			opacity = numberOr(oldSkin[map.opacity], value == -1 and 0.0 or 1.0),
+			opacity = opacityOr(oldSkin[map.opacity], value == -1 and 0.0 or 1.0),
 			firstColor = map.color and numberOr(oldSkin[map.color], 0) or 0,
 			secondColor = map.secondColor and numberOr(oldSkin[map.secondColor], 0) or 0,
 		}

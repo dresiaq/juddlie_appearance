@@ -79,6 +79,7 @@ config.hideRadar = false
 
 -- default head blend shape/skin mix when creating a new freemode ped
 -- or when no mix value is provided (range: 0.0 to 1.0)
+config.defaultCreatorModel = "mp_m_freemode_01"
 config.defaultShapeMix = 0.5
 config.defaultSkinMix = 0.5
 
