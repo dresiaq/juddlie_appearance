@@ -9,6 +9,7 @@ import { usePresets } from "../../store/presets";
 import { useAppearance } from "../../store/appearance";
 import { SectionHeader, PanelCard } from "../../components/Shared";
 import { fetchNui } from "../../utils/fetchNui";
+import { copyToClipboard } from "../../utils/clipboard";
 import { useLocale } from "../../store/locale";
 import { useConfig } from "../../store/config";
 
@@ -76,10 +77,6 @@ const Presets: React.FC = () => {
 		);
 	}, [presets, searchQuery]);
 
-	const copyToClipboard = (text: string) => {
-		navigator.clipboard.writeText(text).catch(() => {});
-	};
-
 	const handleSavePreset = () => {
 		const preset = {
 			id: `preset-${Date.now()}`,
@@ -108,7 +105,7 @@ const Presets: React.FC = () => {
 
 	const handleExport = () => {
 		const json = exportPresets();
-		copyToClipboard(json);
+		void copyToClipboard(json);
 	};
 
 	const handleImport = () => {
@@ -180,7 +177,7 @@ const Presets: React.FC = () => {
 											variant="subtle"
 											onClick={(e: React.MouseEvent) => {
 												e.stopPropagation();
-											copyToClipboard(preset.shareCode || "");
+												void copyToClipboard(preset.shareCode || "");
 											}}
 										>
 											<TbCopy size={10} />
