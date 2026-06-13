@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
 	Box, ScrollArea, Stack, Text, TextInput, Badge, Group, Button,
 	ActionIcon, Modal, Select, Tooltip, createStyles, UnstyledButton,
-	SegmentedControl, Checkbox, NumberInput, CopyButton, Image,
+	SegmentedControl, Checkbox, NumberInput, Image,
 } from "@mantine/core";
 import {
 	TbSearch, TbTrash, TbPlus, TbCopy, TbStar, TbStarFilled,
@@ -14,9 +14,11 @@ import { useAppearance } from "../../store/appearance";
 import { useConfig } from "../../store/config";
 import { SectionHeader, PanelCard } from "../../components/Shared";
 import { fetchNui } from "../../utils/fetchNui";
+import { copyToClipboard } from "../../utils/clipboard";
 import { useNuiEvent } from "../../hooks/useNuiEvent";
 import { makeSignatureSvg } from "../../utils/signature";
 import { useLocale } from "../../store/locale";
+import type { AppearanceData } from "../../types";
 import type { Outfit, OutfitData } from "../../types/outfit";
 
 const useStyles = createStyles((theme) => ({
@@ -65,12 +67,23 @@ const useStyles = createStyles((theme) => ({
 	},
 }));
 
+const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+
+const mergeOutfitData = (appearance: AppearanceData, outfitData: OutfitData): AppearanceData => ({
+	...clone(appearance),
+	clothing: clone(outfitData.clothing || appearance.clothing),
+	props: clone(outfitData.props || appearance.props),
+	tattoos: clone(outfitData.tattoos || appearance.tattoos),
+	...(outfitData.hair ? { hair: clone(outfitData.hair) } : {}),
+});
+
 const Outfits: React.FC = () => {
 	const { classes, cx } = useStyles();
 	const t = useLocale((s) => s.t);
 	const [saveModal, setSaveModal] = useState(false);
 	const [shareModal, setShareModal] = useState<Outfit | null>(null);
 	const [shareResult, setShareResult] = useState<string | null>(null);
+	const [shareCopied, setShareCopied] = useState(false);
 	const [shareMaxUses, setShareMaxUses] = useState<number>(0);
 	const [shareTtlHours, setShareTtlHours] = useState<number>(0);
 	const [importModal, setImportModal] = useState(false);
@@ -92,6 +105,7 @@ const Outfits: React.FC = () => {
 	const toggleFavorite = useOutfits((s) => s.toggleFavorite);
 
 	const current = useAppearance((s) => s.current);
+	const setAppearance = useAppearance((s) => s.setAppearance);
 	const accentColor = useConfig((s) => s.accentColor);
 	const outfitCategories = useConfig((s) => s.outfitCategories);
 	const outfitCategoryColors = useConfig((s) => s.outfitCategoryColors);
@@ -126,7 +140,10 @@ const Outfits: React.FC = () => {
 	}, [defaultCategory, newCategory, outfitCategories]);
 
 	useNuiEvent("shareCodeResult", (data: { code?: string; err?: string }) => {
-		if (data.code) setShareResult(data.code);
+		if (data.code) {
+			setShareResult(data.code);
+			setShareCopied(false);
+		}
 	});
 	useNuiEvent("importCodeResult", (data: { ok: boolean; err?: string }) => {
 		if (data.ok) {
@@ -189,11 +206,23 @@ const Outfits: React.FC = () => {
 	const handleGenerateShare = () => {
 		if (!shareModal) return;
 		setShareResult(null);
+		setShareCopied(false);
 		fetchNui("appearance:generateShareCode", {
 			outfitId: shareModal.id,
 			maxUses: shareMaxUses,
 			ttlSeconds: shareTtlHours * 3600,
 		});
+	};
+
+	const handleCopyShareResult = async () => {
+		if (!shareResult) return;
+
+		const copied = await copyToClipboard(shareResult);
+		setShareCopied(copied);
+
+		if (copied) {
+			window.setTimeout(() => setShareCopied(false), 1500);
+		}
 	};
 
 	const handleImportShare = () => {
@@ -222,6 +251,7 @@ const Outfits: React.FC = () => {
 		const outfit = outfits.find((o) => o.id === outfitId);
 		if (!outfit) return;
 
+		setAppearance(mergeOutfitData(current, outfit.data));
 		fetchNui("appearance:applyOutfit", outfit.data);
 	};
 
@@ -426,7 +456,7 @@ const Outfits: React.FC = () => {
 
 			<Modal
 				opened={!!shareModal}
-				onClose={() => { setShareModal(null); setShareResult(null); }}
+				onClose={() => { setShareModal(null); setShareResult(null); setShareCopied(false); }}
 				title={t("ui.outfits.share_outfit")}
 				centered
 				size="sm"
@@ -455,13 +485,9 @@ const Outfits: React.FC = () => {
 					{shareResult && (
 						<Group spacing={6} position="center">
 							<Text size="md" weight={700} sx={{ letterSpacing: 2 }}>{shareResult}</Text>
-							<CopyButton value={shareResult}>
-								{({ copied, copy }) => (
-									<ActionIcon size="xs" variant="light" onClick={copy} color={copied ? "teal" : accentColor}>
-										<TbCopy size={12} />
-									</ActionIcon>
-								)}
-							</CopyButton>
+							<ActionIcon size="xs" variant="light" onClick={handleCopyShareResult} color={shareCopied ? "teal" : accentColor}>
+								<TbCopy size={12} />
+							</ActionIcon>
 						</Group>
 					)}
 				</Stack>
