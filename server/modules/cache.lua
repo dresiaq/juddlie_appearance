@@ -30,9 +30,15 @@ end
 function cache.load(src)
   if players[src] then return players[src] end
 
-  local identifier <const> = bridge.getIdentifier(src)
+  local sourceId <const> = tonumber(src)
+  if not sourceId or sourceId <= 0 or not GetPlayerName(sourceId) then
+    logger.debug("Skipping cache load for inactive player:", src)
+    return
+  end
+
+  local identifier <const> = bridge.getIdentifier(sourceId)
   if not identifier then
-    logger.warn("Failed to get identifier for player:", src)
+    logger.debug("Identifier is not available for player yet:", src)
     return
   end
 

@@ -164,6 +164,13 @@ end)
 nui.handleMessage("appearance:exit", function()
   logger.debug("NUI exit requested")
   TriggerEvent("juddlie_appearance:client:appearanceCancelled")
+
+  if admin.isAdminEdit then
+    admin.close()
+    menu.close(true)
+    return
+  end
+
   menu.close(false)
 end)
 
@@ -381,6 +388,8 @@ nui.handleMessage("appearance:applyOutfit", function(data)
     
     SetPedHairColor(cache.ped, data.hair.color, data.hair.highlight)
   end
+
+  nui.sendMessage("updateModelAppearance", ped.getAppearance(cache.ped))
 end)
 
 nui.handleMessage("appearance:setCameraPreset", function(data)
@@ -500,7 +509,7 @@ nui.handleMessage("appearance:adminApply", function(data)
   if admin.isAdminEdit then
     admin.saveForPlayer(data)
     admin.close()
-    menu.close(false)
+    menu.close(true)
   end
 end)
 

@@ -10,6 +10,7 @@ local admin = {}
 
 admin.targetSource = nil
 admin.isAdminEdit = false
+admin.ownAppearance = nil
 
 ---@param targetSrc number
 ---@param targetAppearance table
@@ -21,6 +22,7 @@ function admin.openForPlayer(targetSrc, targetAppearance)
 
   admin.targetSource = targetSrc
   admin.isAdminEdit = true
+  admin.ownAppearance = ped.getAppearance(cache.ped)
 
   logger.info("Admin editing appearance for player:", targetSrc)
   lib.notify({ title = locale.t("ui.admin.title"), description = locale.t("ui.admin.editing", targetSrc), type = "info" })
@@ -52,16 +54,22 @@ function admin.close()
 
   logger.debug("Closing admin edit mode")
 
-  local ourAppearance <const> = lib.callback.await("juddlie_appearance:server:getAppearance", false)
-  if ourAppearance then
-    if ourAppearance.model then
-      ped.applyModel(ourAppearance.model)
+  local restoreAppearance = admin.ownAppearance
+  if not restoreAppearance then
+    restoreAppearance = lib.callback.await("juddlie_appearance:server:getAppearance", false)
+  end
+
+  if restoreAppearance then
+    if restoreAppearance.model then
+      ped.applyModel(restoreAppearance.model)
     end
-    ped.applyAppearance(cache.ped, ourAppearance)
+    
+    ped.applyAppearance(cache.ped, restoreAppearance)
   end
 
   admin.targetSource = nil
   admin.isAdminEdit = false
+  admin.ownAppearance = nil
   nui.sendMessage("setAdminMode", { enabled = false, targetId = nil })
 end
 
